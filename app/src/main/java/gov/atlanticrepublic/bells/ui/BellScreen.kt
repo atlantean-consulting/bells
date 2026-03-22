@@ -1,14 +1,18 @@
 package gov.atlanticrepublic.bells.ui
 
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +38,7 @@ import gov.atlanticrepublic.bells.config.AppPreferences
 import gov.atlanticrepublic.bells.config.MotdProvider
 import gov.atlanticrepublic.bells.model.BellSchedule
 import gov.atlanticrepublic.bells.model.WatchSystem
+import gov.atlanticrepublic.bells.service.BellPlaybackService
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -177,26 +182,54 @@ fun BellScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    testPlayer?.release()
-                    testPlayer = MediaPlayer.create(context, R.raw.bells_4).apply {
-                        setAudioAttributes(
-                            AudioAttributes.Builder()
-                                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .build()
-                        )
-                        setOnCompletionListener { mp -> mp.release() }
-                        start()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary,
-                ),
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Test Sound (4 Bells)")
+                Button(
+                    onClick = {
+                        testPlayer?.release()
+                        testPlayer = MediaPlayer.create(context, R.raw.bells_4).apply {
+                            setAudioAttributes(
+                                AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .build()
+                            )
+                            setOnCompletionListener { mp -> mp.release() }
+                            start()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                    ),
+                ) {
+                    Text("Test Sound")
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                val nextBellAudio = "bells_$nextBellCount"
+                Button(
+                    onClick = {
+                        val serviceIntent = Intent(context, BellPlaybackService::class.java).apply {
+                            putExtra(BellPlaybackService.EXTRA_FORCE_PLAY, true)
+                            putExtra(BellPlaybackService.EXTRA_AUDIO_NAME, nextBellAudio)
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(serviceIntent)
+                        } else {
+                            context.startService(serviceIntent)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary,
+                    ),
+                ) {
+                    Text("Ring Next Bell")
+                }
             }
 
             Spacer(modifier = Modifier.weight(3f))

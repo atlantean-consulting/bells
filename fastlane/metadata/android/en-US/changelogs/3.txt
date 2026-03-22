@@ -1,0 +1,1 @@
+Add "Ring Next Bell" button to test the full alarm-to-playback pipeline on demand. No more waiting 30 minutes to debug.

@@ -27,6 +27,8 @@ class BellPlaybackService : Service() {
         private const val CHANNEL_ID = "ships_bell_service"
         private const val NOTIFICATION_ID = 1
         private const val TIMEOUT_MS = 30_000L
+        const val EXTRA_FORCE_PLAY = "force_play"
+        const val EXTRA_AUDIO_NAME = "audio_name"
     }
 
     private var mediaPlayer: MediaPlayer? = null
@@ -43,8 +45,17 @@ class BellPlaybackService : Service() {
         // Must call startForeground within 5 seconds on Android 14
         startForeground(NOTIFICATION_ID, buildNotification())
 
+        val forcePlay = intent?.getBooleanExtra(EXTRA_FORCE_PLAY, false) ?: false
+        val forcedAudioName = intent?.getStringExtra(EXTRA_AUDIO_NAME)
+
         // Schedule the next alarm immediately so it's never lost
         BellAlarmManager.scheduleNext(this)
+
+        if (forcePlay && forcedAudioName != null) {
+            // Bypass all checks — direct playback for testing
+            playBell(forcedAudioName)
+            return START_NOT_STICKY
+        }
 
         // Read preferences synchronously (brief, safe in service start)
         val prefs = AppPreferences(this)
