@@ -245,13 +245,15 @@ object BellSchedule {
      * Handles the New Year's midnight override.
      */
     fun getAudioResourceName(dateTime: LocalDateTime, watchSystem: WatchSystem): String? {
-        // Only ring on exact half-hours
-        if (dateTime.minute != 0 && dateTime.minute != 30) return null
-        if (dateTime.second != 0) return null
+        // Only ring within the first 2 minutes of a half-hour mark,
+        // to allow for alarm delivery delay without being so loose
+        // that a late app launch triggers an unexpected bell.
+        val minute = dateTime.minute
+        if (minute != 0 && minute != 30 && minute != 1 && minute != 31) return null
 
         // New Year's midnight override
         if (dateTime.monthValue == 1 && dateTime.dayOfMonth == 1
-            && dateTime.hour == 0 && dateTime.minute == 0) {
+            && dateTime.hour == 0 && dateTime.minute <= 1) {
             return "bells_16"
         }
 

@@ -1,0 +1,1 @@
+Fix bell not ringing due to strict seconds check on alarm delivery. Fix text fields in settings fighting the cursor on every keystroke.

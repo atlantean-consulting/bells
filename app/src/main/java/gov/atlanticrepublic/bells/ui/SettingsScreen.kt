@@ -26,12 +26,16 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import gov.atlanticrepublic.bells.config.AppPreferences
@@ -61,6 +65,37 @@ fun SettingsScreen(
     val quietEnabled by prefs.quietEnabled.collectAsState(initial = true)
     val bellsEnabled by prefs.bellsEnabled.collectAsState(initial = true)
     val motdList by prefs.motdList.collectAsState(initial = emptyList())
+
+    // Local text states — user edits these freely, saved on focus loss
+    var teamNamesText by remember { mutableStateOf("") }
+    var anchorDateText by remember { mutableStateOf("") }
+    var quietStartText by remember { mutableStateOf("") }
+    var quietEndText by remember { mutableStateOf("") }
+    var motdText by remember { mutableStateOf("") }
+
+    // Sync local state from DataStore on first load / when DataStore changes
+    // (but not while the user is actively editing)
+    var teamNamesFocused by remember { mutableStateOf(false) }
+    var anchorDateFocused by remember { mutableStateOf(false) }
+    var quietStartFocused by remember { mutableStateOf(false) }
+    var quietEndFocused by remember { mutableStateOf(false) }
+    var motdFocused by remember { mutableStateOf(false) }
+
+    LaunchedEffect(teamNames) {
+        if (!teamNamesFocused) teamNamesText = teamNames.joinToString(", ")
+    }
+    LaunchedEffect(anchorDate) {
+        if (!anchorDateFocused) anchorDateText = anchorDate.toString()
+    }
+    LaunchedEffect(quietStart) {
+        if (!quietStartFocused) quietStartText = quietStart.format(DateTimeFormatter.ofPattern("HH:mm"))
+    }
+    LaunchedEffect(quietEnd) {
+        if (!quietEndFocused) quietEndText = quietEnd.format(DateTimeFormatter.ofPattern("HH:mm"))
+    }
+    LaunchedEffect(motdList) {
+        if (!motdFocused) motdText = motdList.joinToString("\n")
+    }
 
     val onColor = MaterialTheme.colorScheme.onBackground
     val fieldColors = OutlinedTextFieldDefaults.colors(
@@ -165,17 +200,22 @@ fun SettingsScreen(
 
             // ── Team names ──
             SectionHeader("Teams")
-            val teamNamesStr = teamNames.joinToString(", ")
             OutlinedTextField(
-                value = teamNamesStr,
-                onValueChange = { value ->
-                    val names = value.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                    if (names.isNotEmpty()) {
-                        scope.launch { prefs.setTeamNames(names) }
-                    }
-                },
+                value = teamNamesText,
+                onValueChange = { teamNamesText = it },
                 label = { Text("Team names (comma-separated)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { state ->
+                        if (teamNamesFocused && !state.isFocused) {
+                            // Save on focus loss
+                            val names = teamNamesText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                            if (names.isNotEmpty()) {
+                                scope.launch { prefs.setTeamNames(names) }
+                            }
+                        }
+                        teamNamesFocused = state.isFocused
+                    },
                 colors = fieldColors,
                 singleLine = true,
             )
@@ -192,15 +232,23 @@ fun SettingsScreen(
             )
 
             OutlinedTextField(
-                value = anchorDate.toString(),
-                onValueChange = { value ->
-                    try {
-                        val date = LocalDate.parse(value)
-                        scope.launch { prefs.setAnchorDate(date) }
-                    } catch (_: Exception) { }
-                },
+                value = anchorDateText,
+                onValueChange = { anchorDateText = it },
                 label = { Text("Anchor date (YYYY-MM-DD)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { state ->
+                        if (anchorDateFocused && !state.isFocused) {
+                            try {
+                                val date = LocalDate.parse(anchorDateText)
+                                scope.launch { prefs.setAnchorDate(date) }
+                            } catch (_: Exception) {
+                                // Reset to current value if invalid
+                                anchorDateText = anchorDate.toString()
+                            }
+                        }
+                        anchorDateFocused = state.isFocused
+                    },
                 colors = fieldColors,
                 singleLine = true,
             )
@@ -279,29 +327,43 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     OutlinedTextField(
-                        value = quietStart.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        onValueChange = { value ->
-                            try {
-                                val time = LocalTime.parse(value, DateTimeFormatter.ofPattern("HH:mm"))
-                                scope.launch { prefs.setQuietStart(time) }
-                            } catch (_: Exception) { }
-                        },
+                        value = quietStartText,
+                        onValueChange = { quietStartText = it },
                         label = { Text("Start") },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { state ->
+                                if (quietStartFocused && !state.isFocused) {
+                                    try {
+                                        val time = LocalTime.parse(quietStartText, DateTimeFormatter.ofPattern("HH:mm"))
+                                        scope.launch { prefs.setQuietStart(time) }
+                                    } catch (_: Exception) {
+                                        quietStartText = quietStart.format(DateTimeFormatter.ofPattern("HH:mm"))
+                                    }
+                                }
+                                quietStartFocused = state.isFocused
+                            },
                         colors = fieldColors,
                         singleLine = true,
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     OutlinedTextField(
-                        value = quietEnd.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        onValueChange = { value ->
-                            try {
-                                val time = LocalTime.parse(value, DateTimeFormatter.ofPattern("HH:mm"))
-                                scope.launch { prefs.setQuietEnd(time) }
-                            } catch (_: Exception) { }
-                        },
+                        value = quietEndText,
+                        onValueChange = { quietEndText = it },
                         label = { Text("End") },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onFocusChanged { state ->
+                                if (quietEndFocused && !state.isFocused) {
+                                    try {
+                                        val time = LocalTime.parse(quietEndText, DateTimeFormatter.ofPattern("HH:mm"))
+                                        scope.launch { prefs.setQuietEnd(time) }
+                                    } catch (_: Exception) {
+                                        quietEndText = quietEnd.format(DateTimeFormatter.ofPattern("HH:mm"))
+                                    }
+                                }
+                                quietEndFocused = state.isFocused
+                            },
                         colors = fieldColors,
                         singleLine = true,
                     )
@@ -313,15 +375,19 @@ fun SettingsScreen(
             // ── Messages of the day ──
             SectionHeader("Messages of the Day")
             OutlinedTextField(
-                value = motdList.joinToString("\n"),
-                onValueChange = { value ->
-                    val messages = value.split("\n").filter { it.isNotBlank() }
-                    scope.launch { prefs.setMotdList(messages) }
-                },
+                value = motdText,
+                onValueChange = { motdText = it },
                 label = { Text("One message per line") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
+                    .height(200.dp)
+                    .onFocusChanged { state ->
+                        if (motdFocused && !state.isFocused) {
+                            val messages = motdText.split("\n").filter { it.isNotBlank() }
+                            scope.launch { prefs.setMotdList(messages) }
+                        }
+                        motdFocused = state.isFocused
+                    },
                 colors = fieldColors,
                 maxLines = 10,
             )
