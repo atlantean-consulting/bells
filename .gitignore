@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Local properties (contains SDK path)
+local.properties
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audacity projects and source audio
+*.aup3
+*.wav
+*.mp3
+
+# Obsidian
+.obsidian/
+
+# Claude
+CLAUDE.md
+tasks/
+prompt.md
+
+# Source icons (already in proper res/ and metadata/ locations)
+/icon_adaptive.png
+/icon_listing.png

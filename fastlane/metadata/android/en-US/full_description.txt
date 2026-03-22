@@ -1,0 +1,21 @@
+Ships Bell strikes the traditional ship's bell at every half-hour mark, keeping time the way sailors have for centuries.
+
+<b>Two Watch Systems</b>
+Choose between the traditional Royal Navy system (seven watches per day with dogged watches) or the experimental Atlantic Republic Navy system (four six-hour watches with extended two-tone bell patterns).
+
+<b>Configurable Crew Rotation</b>
+Name your teams, set a rotation anchor from the ship's log, and the app tracks which team has the watch at any moment.
+
+<b>Night Vision Dark Mode</b>
+Dark mode uses red-on-black to protect your night vision when you're underway. Light mode flies the green and gold.
+
+<b>Quiet Hours</b>
+Set quiet hours so the bells stand down while you sleep alongside. Enabled by default from 2200 to 0600.
+
+<b>Respects Your Device</b>
+Bells play on the notification audio stream, so they follow your device volume and honor Do Not Disturb mode. Minimal battery usage — the app sleeps between bells.
+
+<b>Messages of the Day</b>
+A rotating selection of messages displayed on the main screen. Fully customizable.
+
+No ads. No tracking. No network access. Just bells.

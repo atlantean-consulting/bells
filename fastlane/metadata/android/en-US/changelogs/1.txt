@@ -1,0 +1,1 @@
+Initial release. Traditional Royal Navy and Atlantic Republic Navy watch systems, configurable teams and rotation, quiet hours, night-vision dark mode, and messages of the day.
