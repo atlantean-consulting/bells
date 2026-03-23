@@ -21,6 +21,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -37,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import gov.atlanticrepublic.bells.config.AppPreferences
 import gov.atlanticrepublic.bells.model.BellSchedule
@@ -64,6 +67,7 @@ fun SettingsScreen(
     val quietEnd by prefs.quietEnd.collectAsState(initial = LocalTime.of(6, 0))
     val quietEnabled by prefs.quietEnabled.collectAsState(initial = true)
     val bellsEnabled by prefs.bellsEnabled.collectAsState(initial = true)
+    val bellVolume by prefs.bellVolume.collectAsState(initial = 0.5f)
     val motdList by prefs.motdList.collectAsState(initial = emptyList())
 
     // Local text states — user edits these freely, saved on focus loss
@@ -158,6 +162,36 @@ fun SettingsScreen(
                         checkedThumbColor = MaterialTheme.colorScheme.primary,
                         checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                     ),
+                )
+            }
+
+            SettingsDivider()
+
+            // ── Bell volume ──
+            SectionHeader("Bell Volume")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Slider(
+                    value = bellVolume,
+                    onValueChange = { scope.launch { prefs.setBellVolume(it) } },
+                    valueRange = 0f..1f,
+                    modifier = Modifier.weight(1f),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
+                    ),
+                )
+                Text(
+                    text = "${(bellVolume * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.width(48.dp),
+                    textAlign = TextAlign.End,
                 )
             }
 

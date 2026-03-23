@@ -33,6 +33,7 @@ class BellPlaybackService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var bellVolume: Float = 0.5f
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -51,12 +52,6 @@ class BellPlaybackService : Service() {
         // Schedule the next alarm immediately so it's never lost
         BellAlarmManager.scheduleNext(this)
 
-        if (forcePlay && forcedAudioName != null) {
-            // Bypass all checks — direct playback for testing
-            playBell(forcedAudioName)
-            return START_NOT_STICKY
-        }
-
         // Read preferences synchronously (brief, safe in service start)
         val prefs = AppPreferences(this)
         val bellsEnabled: Boolean
@@ -67,10 +62,17 @@ class BellPlaybackService : Service() {
 
         runBlocking {
             bellsEnabled = prefs.bellsEnabled.first()
+            bellVolume = prefs.bellVolume.first()
             quietEnabled = prefs.quietEnabled.first()
             quietStart = prefs.quietStart.first()
             quietEnd = prefs.quietEnd.first()
             watchSystem = prefs.watchSystem.first()
+        }
+
+        if (forcePlay && forcedAudioName != null) {
+            // Bypass all checks — direct playback for testing
+            playBell(forcedAudioName)
+            return START_NOT_STICKY
         }
 
         if (!bellsEnabled) {
@@ -119,6 +121,7 @@ class BellPlaybackService : Service() {
                     stopSelf()
                     true
                 }
+                setVolume(bellVolume, bellVolume)
                 start()
             }
 

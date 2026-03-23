@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,7 @@ class AppPreferences(private val context: Context) {
         private val QUIET_END = stringPreferencesKey("quiet_end")
         private val QUIET_ENABLED = booleanPreferencesKey("quiet_enabled")
         private val BELLS_ENABLED = booleanPreferencesKey("bells_enabled")
+        private val BELL_VOLUME = floatPreferencesKey("bell_volume")
         private val MOTD_LIST = stringPreferencesKey("motd_list")
 
         private val DEFAULT_MOTD = listOf(
@@ -92,6 +94,10 @@ class AppPreferences(private val context: Context) {
         prefs[BELLS_ENABLED] ?: true
     }
 
+    val bellVolume: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[BELL_VOLUME] ?: 0.5f
+    }
+
     val motdList: Flow<List<String>> = context.dataStore.data.map { prefs ->
         val raw = prefs[MOTD_LIST]
         if (raw != null) {
@@ -135,6 +141,10 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setBellsEnabled(enabled: Boolean) {
         context.dataStore.edit { it[BELLS_ENABLED] = enabled }
+    }
+
+    suspend fun setBellVolume(volume: Float) {
+        context.dataStore.edit { it[BELL_VOLUME] = volume.coerceIn(0f, 1f) }
     }
 
     suspend fun setMotdList(messages: List<String>) {

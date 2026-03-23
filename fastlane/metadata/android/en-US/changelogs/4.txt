@@ -1,0 +1,1 @@
+Add bell volume slider in Settings. No more fighting with system volume — dial in the exact loudness you want, independent of your device's notification volume.

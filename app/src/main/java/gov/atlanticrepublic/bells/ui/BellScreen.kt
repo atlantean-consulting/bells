@@ -60,6 +60,7 @@ fun BellScreen(
     val anchorWatchIndex by prefs.anchorWatchIndex.collectAsState(initial = 0)
     val anchorTeamIndex by prefs.anchorTeamIndex.collectAsState(initial = 0)
     val motdList by prefs.motdList.collectAsState(initial = emptyList())
+    val bellVolume by prefs.bellVolume.collectAsState(initial = 0.5f)
 
     var now by remember { mutableStateOf(LocalDateTime.now()) }
 
@@ -197,6 +198,7 @@ fun BellScreen(
                                     .build()
                             )
                             setOnCompletionListener { mp -> mp.release() }
+                            setVolume(bellVolume, bellVolume)
                             start()
                         }
                     },
